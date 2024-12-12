@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chosen Users</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+        input[type="text"] {
+            width: 100%;
+            padding: 4px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body class="container mt-5">
+    <h1 class="mb-4">Chosen Users</h1>
+    <table class="table table-bordered" id="selectedUsersTable">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Phone</th>
+                <th>Website</th>
+                <th>Additional Info</th> <!-- Editable Column -->
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Selected users' data will be dynamically inserted here -->
+        </tbody>
+    </table>
+    <button id="submitButton" class="btn btn-primary mt-3">Submit</button>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Get selected user IDs from URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const userIds = urlParams.get('ids').split(',');
+
+        // Fetch user data by ID
+        const fetchUserData = async (id) => {
+            const response = await fetch(`https://jsonplaceholder.typicode.com/users/${id}`);
+            return await response.json();
+        };
+
+        // Populate table with selected users
+        const populateTable = async () => {
+            const tableBody = document.querySelector('#selectedUsersTable tbody');
+            for (const id of userIds) {
+                const user = await fetchUserData(id);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.username}</td>
+                    <td>${user.email}</td>
+                    <td>${user.address.street}, ${user.address.city}</td>
+                    <td>${user.phone}</td>
+                    <td><a href="http://${user.website}" target="_blank">${user.website}</a></td>
+                    <td><input type="text" placeholder="Enter additional info" class="form-control"></td>
+                `;
+                tableBody.appendChild(row);
+            }
+        };
+
+        // Handle Submit Button Click
+        document.getElementById('submitButton').addEventListener('click', () => {
+            const tableRows = document.querySelectorAll('#selectedUsersTable tbody tr');
+            const submittedData = [];
+
+            tableRows.forEach(row => {
+                const userId = row.cells[0].innerText;
+                const additionalInfo = row.cells[7].querySelector('input').value; // Input in "Additional Info"
+                submittedData.push({ id: userId, additionalInfo });
+            });
+
+            // Log data to the console (you can send it to a server or process further)
+            console.log('Submitted Data:', submittedData);
+
+            // Example: Show an alert on submission
+            alert('Data submitted successfully! Check the console for details.');
+        });
+
+        populateTable().catch(error => console.error('Error populating table:', error));
+    </script>
+</body>
+</html>
