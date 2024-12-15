@@ -3,74 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Users</title>
-    <!-- Bootstrap CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
+    <title>Contract</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        .highlight-green td {
+            background-color: lightgreen !important;
+        }
+        .highlight-green input[type="checkbox"] {
+            accent-color: green;
+        }
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body class="container mt-5">
-    <h1 class="mb-4 text-center">Select Users</h1>
+    <h1>Contract: SPA-1016</h1>
+    <h1 class="mb-4 text-center">Select Installments</h1>
+
     <div class="table-responsive">
         <table class="table table-bordered table-striped" id="userTable">
             <thead class="table-dark">
                 <tr>
-                    <th>Select</th>
+                    <th>
+                        <input type="checkbox" id="selectAll" class="form-check-input">
+                        <span class="ps-2">Select All</span>
+                    </th>
                     <th>ID</th>
                     <th>Name</th>
-                    <th>Email</th>
-                    <th>Address</th>
+                    <th>Percent %</th>
+                    <th>Amount</th>
+                    <th>Installment Date</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- User data will be dynamically inserted here -->
-            </tbody>
+            <tbody></tbody>
         </table>
     </div>
-    <button id="viewSelected" class="btn btn-primary mt-3">View Selected Users</button>
 
-    <!-- Bootstrap JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <button id="viewSelected" class="btn btn-primary mt-3">View Installments</button>
 
     <script>
-        // Fetch user data from API
-        const apiCall= "https://jsonplaceholder.typicode.com/users"
+        const apiCall = "https://api.sheety.co/a87c07091e5e53489670c3fee9547875/untitledSpreadsheet/contractSpaInstallments";
+
+        // Fetch user data and populate the table
         fetch(apiCall)
             .then(response => response.json())
             .then(data => {
                 const tableBody = document.querySelector('#userTable tbody');
-                data.forEach(user => {
+                data.contractSpaInstallments.forEach((user, index) => {
+                    const isFirstFive = index < 5; // Example condition
                     const row = document.createElement('tr');
+
+                    row.classList.toggle('highlight-green', isFirstFive);
                     row.innerHTML = `
                         <td>
-                            <input type="checkbox" class="form-check-input user-checkbox" data-id="${user.id}">
+                            <input type="checkbox" class="form-check-input user-checkbox" 
+                                data-id="${user.id}" ${isFirstFive ? 'disabled' : ''}>
                         </td>
                         <td>${user.id}</td>
                         <td>${user.name}</td>
-                        <td>${user.email}</td>
-                        <td>${user.address.street}, ${user.address.city}</td>
-                        
+                        <td>${user["percent %"]}%</td>
+                        <td>${user.amount}</td>
+                        <td>${user.installmentDate}</td>
                     `;
                     tableBody.appendChild(row);
                 });
-            })
-            .catch(error => console.error('Error fetching users:', error));
-
-        // Handle the "View Selected Users" button click
-        document.getElementById('viewSelected').addEventListener('click', () => {
-            const selectedIds = [];
-            const checkboxes = document.querySelectorAll('.user-checkbox:checked');
-            checkboxes.forEach(checkbox => {
-                selectedIds.push(checkbox.getAttribute('data-id'));
             });
 
-            if (selectedIds.length > 0) {
-                // Navigate to user-detail.html with selected user IDs
-                window.location.href = `user-detail.html?ids=${selectedIds.join(',')}`;
-            } else {
-                alert('Please select at least one user.');
+        // Select All functionality
+        document.getElementById('selectAll').addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.user-checkbox:not(:disabled)');
+            checkboxes.forEach(checkbox => checkbox.checked = e.target.checked);
+        });
+
+        // Handle "View Installments" button
+        document.getElementById('viewSelected').addEventListener('click', () => {
+            const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked'))
+                .map(checkbox => checkbox.dataset.id);
+
+            if (selectedIds.length === 0) {
+                alert("Please select at least one installment.");
+                return;
             }
+
+            // Store selected IDs in sessionStorage and redirect
+            sessionStorage.setItem('selectedIds', JSON.stringify(selectedIds));
+            window.location.href = 'user-detail.html';
         });
     </script>
 </body>
